@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شركة الدلتا للسكر - نظام إدارة المشتريات الخارجية</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-dark: #0b1220; --bg-card: #111b2e; --border: #1e2d45;
+      --text-primary: #e8eef7; --text-secondary: #8b9bb4; --text-muted: #5a6b85;
+      --green: #10b981; --blue: #3b82f6; --orange: #f59e0b; --red: #ef4444; --purple: #8b5cf6;
+      --sidebar-w: 240px; --header-h: 72px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Cairo', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; direction: rtl; }
+    .header { height: var(--header-h); position: sticky; top: 0; overflow: hidden; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 200; direction: ltr; background: #0b1220; }
+    .header-bg { position: absolute; inset: 0; background: url('https://img.youm7.com/xlarge/202610170144334433_541.jpg') center/cover no-repeat; opacity: 0.38; filter: brightness(0.4) contrast(1.15); }
+    .header-overlay { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(11,18,32,0.93) 0%, rgba(11,18,32,0.78) 45%, rgba(11,18,32,0.88) 100%); }
+    .header > * { position: relative; z-index: 2; }
+    .header-left, .header-right { display: flex; align-items: center; gap: 12px; }
+    .user-info { display: flex; align-items: center; gap: 10px; background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); padding: 5px 12px 5px 5px; border-radius: 30px; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #047857); display: flex; align-items: center; justify-content: center; position: relative; }
+    .user-avatar::after { content: ''; position: absolute; bottom: 0; left: 0; width: 10px; height: 10px; background: #10b981; border: 2px solid #0b1220; border-radius: 50%; }
+    .user-name { font-size: 13px; font-weight: 700; }
+    .user-role { font-size: 11px; color: var(--text-secondary); }
+    .icon-btn { width: 36px; height: 36px; border-radius: 8px; background: rgba(255,255,255,0.05); border: 1px solid transparent; color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; transition: 0.2s; }
+    .icon-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .badge { position: absolute; top: 3px; left: 3px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; min-width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+    .badge.hidden { display: none; }
+    .notif-wrap { position: relative; }
+    .notif-panel {
+      display: none; position: absolute; top: 44px; right: 0; width: 340px; max-height: 400px;
+      background: #111b2e; border: 1px solid #1e2d45; border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5); z-index: 300; overflow: hidden;
+    }
+    .notif-panel.open { display: block; }
+    .notif-panel-header {
+      padding: 12px 14px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13.5px; font-weight: 700;
+    }
+    .notif-list { max-height: 320px; overflow-y: auto; }
+    .notif-item {
+      padding: 11px 14px; border-bottom: 1px solid rgba(30,45,69,0.5);
+      cursor: pointer; transition: 0.15s; display: flex; gap: 10px; align-items: flex-start;
+    }
+    .notif-item:hover { background: rgba(255,255,255,0.04); }
+    .notif-item .ni-icon {
+      width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; font-size: 13px;
+    }
+    .notif-item .ni-icon.purchase { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .notif-item .ni-icon.approval { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .notif-item .ni-icon.join { background: rgba(16,185,129,0.15); color: #34d399; }
+    .notif-item .ni-icon.order { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .notif-item .ni-body { flex: 1; min-width: 0; }
+    .notif-item .ni-title { font-size: 12.5px; font-weight: 600; margin-bottom: 2px; }
+    .notif-item .ni-desc { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .notif-empty { padding: 28px 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+    @media (max-width: 768px) {
+      .notif-panel { width: 300px; right: -60px; }
+    }
+    .date-box { display: flex; align-items: center; gap: 8px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); padding: 6px 12px; border-radius: 8px; font-size: 12.5px; color: #93c5fd; }
+    .header-center { font-size: 14.5px; font-weight: 500; color: var(--text-secondary); text-align: center; flex: 1; }
+    .company-block { display: flex; align-items: center; gap: 10px; }
+    .company-logo { width: 42px; height: 42px; border-radius: 10px; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; }
+    .company-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .company-name { font-size: 14px; font-weight: 700; line-height: 1.2; }
+    .company-name span { display: block; font-size: 11px; font-weight: 400; color: var(--text-secondary); }
+    .main-layout { display: flex; flex-direction: row-reverse; min-height: calc(100vh - var(--header-h) - 34px); }
+    .sidebar { width: var(--sidebar-w); background: #0d1628; border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 12px 10px; position: sticky; top: var(--header-h); height: calc(100vh - var(--header-h) - 34px); overflow-y: auto; }
+    .sidebar-item { display: flex; align-items: center; gap: 11px; padding: 10px 13px; border-radius: 10px; color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; margin-bottom: 2px; border: none; background: none; width: 100%; text-align: right; }
+    .sidebar-item i { width: 20px; text-align: center; font-size: 15px; }
+    .sidebar-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+    .sidebar-item.active { background: linear-gradient(90deg, rgba(59,130,246,0.25), rgba(59,130,246,0.05)); color: #60a5fa; border-right: 3px solid #3b82f6; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 8px 6px; }
+    .notif-box { margin-top: auto; background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); border-radius: 12px; padding: 11px; display: flex; align-items: center; gap: 10px; }
+    .notif-box .icon { width: 34px; height: 34px; background: rgba(239,68,68,0.15); border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #f87171; }
+    .server-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); margin-top: 10px; padding: 0 4px; }
+    .server-status .dot { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px #10b981; }
+    .company-side { margin-top: 10px; text-align: center; padding: 10px; background: rgba(16,185,129,0.05); border-radius: 12px; border: 1px solid rgba(16,185,129,0.15); }
+    .content { flex: 1; padding: 16px 18px; overflow-y: auto; background: radial-gradient(ellipse at top right, rgba(16,185,129,0.03), transparent 50%); }
+    .section { display: none; }
+    .section.active { display: block; }
+    .kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; direction: ltr; }
+    .kpi-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; position: relative; overflow: hidden; }
+    .kpi-card::before { content: ''; position: absolute; top: 0; right: 0; width: 100%; height: 3px; }
+    .kpi-card.green::before { background: linear-gradient(90deg,#10b981,#34d399); }
+    .kpi-card.blue::before { background: linear-gradient(90deg,#3b82f6,#60a5fa); }
+    .kpi-card.orange::before { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .kpi-card.red::before { background: linear-gradient(90deg,#ef4444,#f87171); }
+    .kpi-card.purple::before { background: linear-gradient(90deg,#8b5cf6,#a78bfa); }
+    .kpi-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .kpi-icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+    .kpi-card.green .kpi-icon { background: rgba(16,185,129,0.15); color: #34d399; }
+    .kpi-card.blue .kpi-icon { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .kpi-card.orange .kpi-icon { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .kpi-card.red .kpi-icon { background: rgba(239,68,68,0.15); color: #f87171; }
+    .kpi-card.purple .kpi-icon { background: rgba(139,92,246,0.15); color: #a78bfa; }
+    .kpi-title { font-size: 12px; color: var(--text-secondary); margin-bottom: 3px; }
+    .kpi-value { font-size: 20px; font-weight: 800; }
+    .kpi-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 14px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .btn { padding: 7px 14px; border-radius: 8px; border: none; font-family: 'Cairo'; font-size: 12.5px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
+    .btn-primary { background: #3b82f6; color: #fff; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-success { background: #10b981; color: #fff; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+    .btn-outline:hover { border-color: #3b82f6; color: #60a5fa; }
+    .btn-sm { padding: 5px 10px; font-size: 11.5px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th { text-align: right; padding: 9px 8px; color: var(--text-muted); font-weight: 600; font-size: 11.5px; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 8px; border-bottom: 1px solid rgba(30,45,69,0.5); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .status { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+    .status.ok { background: rgba(16,185,129,0.15); color: #34d399; }
+    .status.warn { background: rgba(245,158,11,0.15); color: #fbbf24; }
+    .status.danger { background: rgba(239,68,68,0.15); color: #f87171; }
+    .status.info { background: rgba(59,130,246,0.15); color: #60a5fa; }
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+    .empty-state i { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; margin-bottom: 16px; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group label { font-size: 12.5px; color: var(--text-secondary); font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text-primary); font-family: 'Cairo'; font-size: 13px; outline: none; }
+    .form-group input:focus, .form-group select:focus { border-color: #3b82f6; }
+    .form-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-start; }
+    .settings-tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+    .settings-tab { padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); font-family: 'Cairo'; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .settings-tab.active { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #60a5fa; }
+    .conn-card { background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .conn-card h4 { font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .conn-status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px; border-radius: 20px; }
+    .conn-status.connected { background: rgba(16,185,129,0.15); color: #34d399; }
+    .conn-status.disconnected { background: rgba(239,68,68,0.15); color: #f87171; }
+    .main-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; margin-bottom: 14px; direction: ltr; }
+    .bottom-grid { display: grid; grid-template-columns: 0.9fr 1.2fr 0.9fr; gap: 14px; margin-bottom: 14px; direction: ltr; }
+    .chart-box { height: 220px; position: relative; }
+    .app-footer { height: 34px; background: #0a1220; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 18px; font-size: 11.5px; color: var(--text-muted); }
+    .status-dot { width: 7px; height: 7px; background: #10b981; border-radius: 50%; box-shadow: 0 0 5px #10b981; display: inline-block; }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.65); display: none; align-items: center; justify-content: center; z-index: 200; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: #111b2e; border: 1px solid var(--border); border-radius: 16px; width: 560px; max-width: 95%; max-height: 90vh; overflow-y: auto; padding: 20px; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { font-size: 16px; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+    .file-preview { margin-top: 8px; font-size: 12px; color: #60a5fa; }
+    .location-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+    .location-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .location-card img { width: 100%; height: 160px; object-fit: cover; display: block; }
+    .location-card .body { padding: 14px; }
+    .location-card h3 { font-size: 15px; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .location-card p { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+    .location-card .meta { margin-top: 10px; display: flex; gap: 12px; font-size: 12px; color: var(--text-muted); flex-wrap: wrap; }
+    .location-contacts { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .location-contacts h4 { font-size: 12.5px; color: var(--text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .contact-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12.5px; border-bottom: 1px solid rgba(30,45,69,0.4); }
+    .contact-row:last-child { border-bottom: none; }
+    .contact-row .name { font-weight: 600; }
+    .contact-row .pos { color: var(--text-muted); font-size: 11.5px; }
+    .contact-row a { color: #60a5fa; text-decoration: none; direction: ltr; }
+    .contact-row a:hover { text-decoration: underline; }
+    .no-contacts { font-size: 12px; color: var(--text-muted); font-style: italic; }
+    .pdf-link { color: #60a5fa; cursor: pointer; text-decoration: underline; font-size: 12px; }
+    .pdf-link:hover { color: #93c5fd; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #1e2d45; border-radius: 3px; }
+
+    .menu-toggle { display: none; width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.08); border: none; color: #fff; font-size: 18px; cursor: pointer; align-items: center; justify-content: center; }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; }
+
+    /* ========== AUTH SCREENS ========== */
+    .auth-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: radial-gradient(ellipse at top, #0d1b2a 0%, #0b1220 60%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .auth-screen.hidden { display: none; }
+    .auth-card {
+      background: #111b2e; border: 1px solid #1e2d45; border-radius: 20px;
+      width: 100%; max-width: 420px; padding: 28px 24px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .auth-logo { text-align: center; margin-bottom: 20px; }
+    .auth-logo img { width: 72px; height: 72px; border-radius: 14px; background: #fff; object-fit: contain; }
+    .auth-logo h1 { font-size: 18px; margin-top: 10px; font-weight: 700; }
+    .auth-logo p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .auth-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .auth-tab {
+      flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary); font-family: 'Cairo';
+      font-size: 13.5px; font-weight: 600; cursor: pointer;
+    }
+    .auth-tab.active { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #60a5fa; }
+    .auth-form .form-group { margin-bottom: 12px; }
+    .auth-error {
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171; padding: 10px 12px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 12px; display: none;
+    }
+    .auth-error.show { display: block; }
+    .auth-success {
+      background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3);
+      color: #34d399; padding: 10px 12px; border-radius: 8px; font-size: 13px;
+      margin-bottom: 12px; display: none;
+    }
+    .auth-success.show { display: block; }
+    .auth-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 14px; text-align: center; line-height: 1.5; }
+    .app-root.hidden { display: none !important; }
+    #appRoot { display: flex; flex-direction: column; min-height: 100vh; }
+
+    @media (max-width: 1024px) {
+      .kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+      .main-grid, .bottom-grid { grid-template-columns: 1fr !important; }
+      .location-cards { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 768px) {
+      :root { --sidebar-w: 260px; --header-h: 60px; }
+      .menu-toggle { display: flex; }
+      .sidebar {
+        position: fixed; top: 0; right: -280px; height: 100vh; z-index: 180;
+        transition: right 0.3s ease; box-shadow: -4px 0 20px rgba(0,0,0,0.4);
+      }
+      .sidebar.open { right: 0; }
+      .sidebar-overlay.show { display: block; }
+      .header { padding: 0 12px; }
+      .header-center { display: none; }
+      .date-box { display: none; }
+      .company-name span { display: none; }
+      .kpi-row { grid-template-columns: 1fr 1fr !important; gap: 8px; }
+      .kpi-value { font-size: 16px; }
+      .kpi-title { font-size: 11px; }
+      .content { padding: 12px; }
+      .form-grid { grid-template-columns: 1fr !important; }
+      .card { padding: 12px; }
+      .btn { padding: 8px 12px; font-size: 12px; }
+      table { font-size: 11.5px; }
+      th, td { padding: 8px 6px; }
+      .modal { width: 95%; padding: 16px; }
+      .user-info { padding: 4px 8px 4px 4px; }
+      .user-name { font-size: 12px; }
+      .header-left { gap: 6px; }
+      .icon-btn { width: 34px; height: 34px; }
+    }
+    @media (max-width: 480px) {
+      .kpi-row { grid-template-columns: 1fr !important; }
+      .header-right .company-name { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- ========== AUTH SCREENS ========== -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <img id="authLogoImg" alt="DSC" style="width:72px;height:72px;border-radius:14px;background:#fff;object-fit:contain;">
+        <h1>شركة الدلتا للسكر</h1>
+        <p>نظام إدارة المشتريات الخارجية</p>
+      </div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="showAuthTab('login')">تسجيل الدخول</button>
+        <button class="auth-tab" id="tabRegister" onclick="showAuthTab('register')">تسجيل حساب</button>
+      </div>
+      <div id="authError" class="auth-error"></div>
+      <div id="authSuccess" class="auth-success"></div>
+
+      <!-- Login Form -->
+      <div id="formLogin" class="auth-form">
+        <div class="form-group"><label>اسم المستخدم</label><input type="text" id="loginUser" placeholder="username" autocomplete="username"></div>
+        <div class="form-group"><label>كلمة المرور</label><input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;margin-top:8px;" onclick="doLogin()"><i class="fas fa-sign-in-alt"></i> دخول</button>
+
+      </div>
+
+      <!-- Register Form -->
+      <div id="formRegister" class="auth-form" style="display:none;">
+        <div class="form-group"><label>الاسم الكامل</label><input type="text" id="regName" placeholder="الاسم"></div>
+        <div class="form-group"><label>اسم المستخدم</label><input type="text" id="regUser" placeholder="username"></div>
+        <div class="form-group"><label>كلمة المرور</label><input type="password" id="regPass" placeholder="••••••••"></div>
+        <div class="form-group"><label>القسم</label>
+          <select id="regDept">
+            <option value="hq">المركز الرئيسي</option>
+            <option value="factory">المصنع</option>
+          </select>
+        </div>
+        <div class="form-group"><label>الصلاحية المطلوبة</label>
+          <select id="regPerm">
+            <option value="employee">موظف (إضافة فقط)</option>
+            <option value="manager">مدير (إضافة + تعديل + حذف)</option>
+          </select>
+        </div>
+        <button class="btn btn-success" style="width:100%;justify-content:center;padding:12px;margin-top:8px;" onclick="doRegister()"><i class="fas fa-user-plus"></i> طلب الانضمام</button>
+        <div class="auth-hint">بعد التسجيل، يحتاج طلبك موافقة مسؤول المركز الرئيسي أو المصنع قبل الدخول.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== APP ========== -->
+  <div id="appRoot" class="app-root hidden">
+  <header class="header">
+    <div class="header-bg"></div>
+    <div class="header-overlay"></div>
+    <div class="header-left">
+      <button class="menu-toggle" onclick="toggleSidebar()" title="القائمة"><i class="fas fa-bars"></i></button>
+      <div class="user-info">
+        <div class="user-avatar"><i class="fas fa-user"></i></div>
+        <div>
+          <div class="user-name" id="currentUserName">أحمد سيد</div>
+          <div class="user-role" id="currentUserRole">مدير المشتريات</div>
+        </div>
+      </div>
+      <div class="notif-wrap">
+        <button class="icon-btn" title="الإشعارات" onclick="toggleNotifPanel(event)"><i class="fas fa-bell"></i><span class="badge hidden" id="notifBadge">0</span></button>
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-panel-header">
+            <span><i class="fas fa-bell"></i> الإشعارات</span>
+            <span style="font-size:11px;color:var(--text-muted);" id="notifPanelCount">0</span>
+          </div>
+          <div class="notif-list" id="notifList"></div>
+        </div>
+      </div>
+      <button class="icon-btn" onclick="location.reload()" title="تحديث"><i class="fas fa-sync-alt"></i></button>
+      <button class="icon-btn" onclick="doLogout()" title="تسجيل الخروج" style="color:#f87171;"><i class="fas fa-sign-out-alt"></i></button>
+      <div class="date-box"><i class="far fa-calendar-alt"></i><span id="currentDateTime"></span></div>
+    </div>
+    <div class="header-center">مرحباً بك في نظام إدارة المشتريات الخارجية</div>
+    <div class="header-right">
+      <div class="company-block">
+        <div><div class="company-name" style="text-align:left;">شركة الدلتا للسكر<span>Delta Sugar Company</span></div></div>
+        <div class="company-logo"><img src="data:image/jpeg;base64,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" alt="DSC Logo"></div>
+      </div>
+    </div>
+  </header>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+  <div class="main-layout">
+    <main class="content">
+      <!-- DASHBOARD -->
+      <div id="section-dashboard" class="section active">
+        <div class="kpi-row">
+          <div class="kpi-card green"><div class="kpi-header"><div><div class="kpi-title">إجمالي المشتريات</div><div class="kpi-value" id="kpiTotalValue">0</div></div><div class="kpi-icon"><i class="fas fa-shopping-cart"></i></div></div><div class="kpi-sub">جنيه مصري</div></div>
+          <div class="kpi-card blue"><div class="kpi-header"><div><div class="kpi-title">عدد أوامر الشراء</div><div class="kpi-value" id="kpiOrdersCount">0</div></div><div class="kpi-icon"><i class="fas fa-file-alt"></i></div></div></div>
+          <div class="kpi-card orange"><div class="kpi-header"><div><div class="kpi-title">الموردون النشطون</div><div class="kpi-value" id="kpiSuppliersCount">0</div></div><div class="kpi-icon"><i class="fas fa-truck"></i></div></div></div>
+          <div class="kpi-card red"><div class="kpi-header"><div><div class="kpi-title">في انتظار الموافقة</div><div class="kpi-value" id="kpiPendingCount">0</div></div><div class="kpi-icon"><i class="fas fa-exclamation-triangle"></i></div></div></div>
+          <div class="kpi-card purple"><div class="kpi-header"><div><div class="kpi-title">إجمالي الأصناف</div><div class="kpi-value" id="kpiItemsCount">0</div></div><div class="kpi-icon"><i class="fas fa-boxes"></i></div></div><div class="kpi-sub">من المخزن</div></div>
+        </div>
+        <div class="main-grid">
+          <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-bar" style="color:#3b82f6;"></i> حركة المشتريات</div></div><div class="chart-box"><canvas id="purchasesChart"></canvas></div></div>
+          <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-clipboard-list" style="color:#60a5fa;"></i> آخر طلبات الشراء</div><button class="btn btn-sm btn-primary" onclick="openModal('purchase')"><i class="fas fa-plus"></i> إضافة</button></div><div id="dashPurchasesTable"></div></div>
+        </div>
+        <div class="bottom-grid">
+          <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> القيمة حسب الموردين</div></div><div class="chart-box" style="height:180px;"><canvas id="suppliersPie"></canvas></div></div>
+          <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-check-double"></i> طلبات تحتاج موافقة</div><button class="btn btn-sm btn-outline" onclick="showSection('approvals')">عرض الكل</button></div><div id="dashApprovalsTable"></div></div>
+          <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-warehouse"></i> حالة المخزون</div><button class="btn btn-sm btn-outline" onclick="showSection('warehouses')">عرض الكل</button></div><div id="dashInventoryTable"></div></div>
+        </div>
+      </div>
+
+      <!-- PURCHASES -->
+      <div id="section-purchases" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-file-invoice"></i> طلبات الشراء</div><button class="btn btn-primary" onclick="openModal('purchase')"><i class="fas fa-plus"></i> طلب شراء جديد</button></div><div id="purchasesTable"></div></div>
+      </div>
+
+      <!-- ORDERS -->
+      <div id="section-orders" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-file-contract"></i> أوامر الشراء</div><button class="btn btn-primary" onclick="openModal('order')"><i class="fas fa-plus"></i> أمر شراء جديد</button></div><div id="ordersTable"></div></div>
+      </div>
+
+      <!-- SUPPLIERS -->
+      <div id="section-suppliers" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-users"></i> الموردون</div><button class="btn btn-primary" onclick="openModal('supplier')"><i class="fas fa-user-plus"></i> إضافة مورد</button></div><div id="suppliersTable"></div></div>
+      </div>
+
+      <!-- WAREHOUSES -->
+      <div id="section-warehouses" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-warehouse"></i> المخازن والأصناف</div><button class="btn btn-primary" onclick="openModal('item')"><i class="fas fa-plus"></i> إضافة صنف</button></div><div id="inventoryTable"></div></div>
+      </div>
+
+      <!-- RECEIPTS -->
+      <div id="section-receipts" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-box-open"></i> الاستلامات</div><button class="btn btn-primary" onclick="openModal('receipt')"><i class="fas fa-plus"></i> تسجيل استلام</button></div><div id="receiptsTable"></div></div>
+      </div>
+
+      <!-- SHIPPING -->
+      <div id="section-shipping" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-ship"></i> الشحن والاستيراد</div><button class="btn btn-primary" onclick="openModal('shipping')"><i class="fas fa-plus"></i> إضافة شحنة</button></div><div id="shippingTable"></div></div>
+      </div>
+
+      <!-- FACTORIES -->
+      <div id="section-factories" class="section">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-industry"></i> المصانع والمراكز</div>
+            <button class="btn btn-sm btn-primary" onclick="openModal('contact')"><i class="fas fa-user-plus"></i> إضافة جهة اتصال</button>
+          </div>
+          <div id="factoriesContent"></div>
+        </div>
+      </div>
+
+      <!-- APPROVALS -->
+      <div id="section-approvals" class="section">
+        <div class="card"><div class="card-header"><div class="card-title"><i class="fas fa-shield-alt"></i> الاعتمادات والموافقات</div></div><div id="approvalsTable"></div></div>
+      </div>
+
+      <!-- REPORTS -->
+      <div id="section-reports" class="section">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> التقارير</div></div>
+          <div class="empty-state">
+            <i class="fas fa-chart-bar"></i>
+            <p>أدخل بيانات أولاً (طلبات شراء، موردين، مخزون) ثم يمكنك إنشاء التقارير من هنا.</p>
+            <button class="btn btn-primary" onclick="showSection('purchases')"><i class="fas fa-plus"></i> إضافة بيانات</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACTS -->
+      <div id="section-contacts" class="section">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i class="fas fa-address-book"></i> جهات الاتصال - المدراء والموظفين</div>
+            <button class="btn btn-primary" onclick="openModal('contact')"><i class="fas fa-user-plus"></i> إضافة جهة اتصال</button>
+          </div>
+          <div id="contactsTable"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div id="section-settings" class="section">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fas fa-cog"></i> الإعدادات والربط مع السيرفر</div></div>
+          <div class="settings-tabs">
+            <button class="settings-tab active" onclick="showSettingsTab('connection', this)">الاتصال بالسيرفر</button>
+            <button class="settings-tab" onclick="showSettingsTab('approvals', this); renderPendingUsers();">طلبات الانضمام</button>
+            <button class="settings-tab" onclick="showSettingsTab('users', this)">المستخدمين</button>
+            <button class="settings-tab" onclick="showSettingsTab('general', this)">عام</button>
+          </div>
+          <div id="settings-approvals" class="settings-pane" style="display:none;">
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px;">طلبات انضمام القسم الخاص بك — الموافقة للمدراء فقط</p>
+            <div id="pendingUsersTable"></div>
+          </div>
+          <div id="settings-connection" class="settings-pane">
+            <div class="conn-card">
+              <h4><i class="fas fa-building" style="color:#3b82f6;"></i> المركز الرئيسي (Headquarters)</h4>
+              <div class="form-grid">
+                <div class="form-group"><label>عنوان السيرفر</label><input type="text" id="hqUrl" placeholder="https://hq.deltasugar.local:8443"></div>
+                <div class="form-group"><label>المنفذ</label><input type="text" id="hqPort" placeholder="8443"></div>
+                <div class="form-group"><label>اسم المستخدم</label><input type="text" id="hqUser" placeholder="admin"></div>
+                <div class="form-group"><label>كلمة المرور</label><input type="password" id="hqPass" placeholder="••••••••"></div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" onclick="testConnection('hq')"><i class="fas fa-plug"></i> اختبار</button>
+                <button class="btn btn-success" onclick="saveConnection('hq')"><i class="fas fa-save"></i> حفظ</button>
+                <span class="conn-status disconnected" id="hqStatus"><i class="fas fa-times-circle"></i> غير متصل</span>
+              </div>
+            </div>
+            <div class="conn-card">
+              <h4><i class="fas fa-industry" style="color:#f59e0b;"></i> المصنع (Factory)</h4>
+              <div class="form-grid">
+                <div class="form-group"><label>عنوان سيرفر المصنع</label><input type="text" id="factoryUrl" placeholder="https://factory.deltasugar.local:8443"></div>
+                <div class="form-group"><label>المنفذ</label><input type="text" id="factoryPort" placeholder="8443"></div>
+                <div class="form-group"><label>اسم المستخدم</label><input type="text" id="factoryUser" placeholder="factory_admin"></div>
+                <div class="form-group"><label>كلمة المرور</label><input type="password" id="factoryPass" placeholder="••••••••"></div>
+              </div>
+              <div class="form-actions">
+                <button class="btn btn-primary" onclick="testConnection('factory')"><i class="fas fa-plug"></i> اختبار</button>
+                <button class="btn btn-success" onclick="saveConnection('factory')"><i class="fas fa-save"></i> حفظ</button>
+                <span class="conn-status disconnected" id="factoryStatus"><i class="fas fa-times-circle"></i> غير متصل</span>
+              </div>
+            </div>
+            </div>
+          <div id="settings-users" class="settings-pane" style="display:none;">
+            <div class="form-grid">
+              <div class="form-group"><label>اسم المستخدم</label><input type="text" id="setUserName" value="أحمد سيد"></div>
+              <div class="form-group"><label>المسمى الوظيفي</label><input type="text" id="setUserRole" value="مدير المشتريات"></div>
+              <div class="form-group full"><label>صلاحية المستخدم الحالي</label>
+                <select id="setUserPerm">
+                  <option value="manager">مدير (إضافة + تعديل + حذف)</option>
+                  <option value="employee">موظف (إضافة فقط)</option>
+                </select>
+              </div>
+            </div>
+            <p style="font-size:12px;color:var(--text-muted);margin:10px 0;">المدير يقدر يعدل ويحذف أي بيانات. الموظف يقدر يضيف بس.</p>
+            <div class="form-actions"><button class="btn btn-success" onclick="saveUserSettings()"><i class="fas fa-save"></i> حفظ</button></div>
+          </div>
+          <div id="settings-general" class="settings-pane" style="display:none;">
+            <div class="form-group" style="margin-bottom:12px;"><label><input type="checkbox" id="clearDataConfirm"> تأكيد مسح جميع البيانات المحلية</label></div>
+            <button class="btn btn-danger" onclick="clearAllData()"><i class="fas fa-trash"></i> مسح كل البيانات</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <button class="sidebar-item active" onclick="showSection('dashboard')"><i class="fas fa-home"></i> الرئيسية</button>
+      <button class="sidebar-item" onclick="showSection('purchases')"><i class="fas fa-file-invoice"></i> طلبات الشراء</button>
+      <button class="sidebar-item" onclick="showSection('orders')"><i class="fas fa-file-contract"></i> أوامر الشراء</button>
+      <button class="sidebar-item" onclick="showSection('suppliers')"><i class="fas fa-users"></i> الموردون</button>
+      <button class="sidebar-item" onclick="showSection('warehouses')"><i class="fas fa-warehouse"></i> المخازن</button>
+      <button class="sidebar-item" onclick="showSection('receipts')"><i class="fas fa-box-open"></i> الاستلامات</button>
+      <button class="sidebar-item" onclick="showSection('shipping')"><i class="fas fa-ship"></i> الشحن والاستيراد</button>
+      <button class="sidebar-item" onclick="showSection('factories')"><i class="fas fa-industry"></i> المصانع</button>
+      <button class="sidebar-item" onclick="showSection('approvals')"><i class="fas fa-shield-alt"></i> الاعتمادات والموافقات</button>
+      <button class="sidebar-item" onclick="showSection('reports')"><i class="fas fa-chart-line"></i> التقارير</button>
+      <button class="sidebar-item" onclick="showSection('contacts')"><i class="fas fa-address-book"></i> جهات الاتصال</button>
+      <button class="sidebar-item" onclick="showSection('settings')"><i class="fas fa-cog"></i> الإعدادات</button>
+      <div class="sidebar-divider"></div>
+      <div class="notif-box" style="cursor:pointer;" onclick="document.getElementById('notifPanel')?.classList.add('open'); updateNotifications();">
+        <div class="icon"><i class="fas fa-bell"></i></div>
+        <div><div style="font-size:13px;font-weight:600;">مركز الإشعارات</div><div style="font-size:11px;color:#f87171;" id="sideNotifCount">0 إشعارات</div></div>
+      </div>
+      <div class="server-status"><div class="dot"></div><span id="globalStatusText">غير متصل بالسيرفر</span></div>
+      <div class="company-side">
+        <img src="data:image/jpeg;base64,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" alt="DSC" style="width:48px;height:48px;border-radius:8px;background:#fff;margin:0 auto 6px;display:block;object-fit:contain;">
+        <div style="font-size:12px;font-weight:700;">شركة الدلتا للسكر</div>
+        <div style="font-size:10px;color:var(--text-muted);">Delta Sugar Company</div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="app-footer">
+    <div>v1.2.0 | نظام المشتريات الخارجية</div>
+    <div><span class="status-dot"></span> <span id="footerStatus">محلي (Local Storage)</span></div>
+    <div>Delta Sugar Company - Procurement System</div>
+  </footer>
+  </div><!-- end appRoot -->
+
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-header"><h3 id="modalTitle">إضافة</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const DB = {
+      get(key) { const raw = localStorage.getItem('delta_' + key); return raw ? JSON.parse(raw) : []; },
+      set(key, data) { localStorage.setItem('delta_' + key, JSON.stringify(data)); },
+      getSettings() {
+        const raw = localStorage.getItem('delta_settings');
+        return raw ? JSON.parse(raw) : {
+          hq: { url:'', port:'', user:'', pass:'', connected:false },
+          factory: { url:'', port:'', user:'', pass:'', connected:false },
+          userName: 'أحمد سيد', userRole: 'مدير المشتريات', userPerm: 'manager'
+        };
+      },
+      setSettings(s) { localStorage.setItem('delta_settings', JSON.stringify(s)); },
+      getUsers() {
+        let users = this.get('users');
+        // Migrate old default accounts to delta / 2026
+        if (users.some(u => u.username === 'hq_admin' || u.username === 'factory_admin')) {
+          users = users.filter(u => u.username !== 'hq_admin' && u.username !== 'factory_admin');
+          if (!users.some(u => u.username === 'delta')) {
+            users.unshift({ id: 1, username: 'delta', password: '2026', name: 'مسؤول النظام', dept: 'hq', perm: 'manager', status: 'approved', createdAt: new Date().toISOString() });
+          }
+          this.set('users', users);
+        }
+        if (!users.length) {
+          // Seed default admin
+          users = [
+            { id: 1, username: 'delta', password: '2026', name: 'مسؤول النظام', dept: 'hq', perm: 'manager', status: 'approved', createdAt: new Date().toISOString() }
+          ];
+          this.set('users', users);
+        }
+        return users;
+      },
+      setUsers(u) { this.set('users', u); },
+      getSession() {
+        const raw = localStorage.getItem('delta_session');
+        return raw ? JSON.parse(raw) : null;
+      },
+      setSession(s) {
+        if (s) localStorage.setItem('delta_session', JSON.stringify(s));
+        else localStorage.removeItem('delta_session');
+      }
+    };
+
+    // ===== طبقة المزامنة مع السيرفر (server.py) =====
+    function esc(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    // ===== الربط السحابي: Firebase Realtime Database عبر REST (بدون سيرفر أو بايثون) =====
+    // >>> رابط قاعدة البيانات الثابت — غيّره هنا فقط (مثال: 'https://xxxx-default-rtdb.firebaseio.com') <<<
+    // مفيش أي شاشة أو إعدادات في الصفحة تغيّره، فالمستخدمين مش بيشوفوه ولا بيعدلوه.
+    const CLOUD_URL = '';
+
+    function sha256Fallback(str) {
+      const bytes = Array.from(new TextEncoder().encode(str));
+      const primes = [];
+      for (let n = 2; primes.length < 64; n++) { if (primes.every(p => n % p)) primes.push(n); }
+      const frac = x => Math.floor((x - Math.floor(x)) * 4294967296);
+      const H = primes.slice(0, 8).map(p => frac(Math.sqrt(p)));
+      const K = primes.map(p => frac(Math.cbrt(p)));
+      const bitLen = bytes.length * 8;
+      bytes.push(0x80);
+      while (bytes.length % 64 !== 56) bytes.push(0);
+      bytes.push(0, 0, 0, 0, (bitLen >>> 24) & 255, (bitLen >>> 16) & 255, (bitLen >>> 8) & 255, bitLen & 255);
+      const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+      for (let i = 0; i < bytes.length; i += 64) {
+        const w = new Array(64);
+        for (let j = 0; j < 16; j++) w[j] = (bytes[i + 4*j] << 24) | (bytes[i + 4*j + 1] << 16) | (bytes[i + 4*j + 2] << 8) | bytes[i + 4*j + 3];
+        for (let j = 16; j < 64; j++) {
+          const s0 = rotr(w[j-15], 7) ^ rotr(w[j-15], 18) ^ (w[j-15] >>> 3);
+          const s1 = rotr(w[j-2], 17) ^ rotr(w[j-2], 19) ^ (w[j-2] >>> 10);
+          w[j] = (w[j-16] + s0 + w[j-7] + s1) | 0;
+        }
+        let [a, b, c, d, e, f, g, h] = H;
+        for (let j = 0; j < 64; j++) {
+          const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+          const ch = (e & f) ^ (~e & g);
+          const t1 = (h + S1 + ch + K[j] + w[j]) | 0;
+          const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+          const maj = (a & b) ^ (a & c) ^ (b & c);
+          const t2 = (S0 + maj) | 0;
+          h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
+        }
+        H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + c) | 0; H[3] = (H[3] + d) | 0;
+        H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+      }
+      return H.map(x => (x >>> 0).toString(16).padStart(8, '0')).join('');
+    }
+    // crypto.subtle مش متاح على http://IP، فنستخدم النسخة اليدوية كاحتياطي
+    function sha256Hex(str) {
+      const c = globalThis.crypto;
+      if (c && c.subtle) {
+        return c.subtle.digest('SHA-256', new TextEncoder().encode(str))
+          .then(buf => Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join(''));
+      }
+      return Promise.resolve(sha256Fallback(str));
+    }
+    function randSalt() {
+      const a = new Uint8Array(8);
+      if (globalThis.crypto && crypto.getRandomValues) crypto.getRandomValues(a);
+      else for (let i = 0; i < 8; i++) a[i] = Math.floor(Math.random() * 256);
+      return Array.from(a).map(x => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    const API = {
+      base() {
+        let u = String(CLOUD_URL || '').trim().replace(/\/+$/, '');
+        if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+        return u;
+      },
+      async fb(method, path, body, query) {
+        const base = this.base();
+        if (!base) throw new Error('no-cloud');
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 8000);
+        try {
+          // من غير Content-Type مخصص عشان نتجنب مشاكل CORS
+          const res = await fetch(base + '/' + path + '.json' + (query || ''), {
+            method, body: body === undefined ? undefined : JSON.stringify(body), signal: ctl.signal
+          });
+          let data = null; try { data = await res.json(); } catch (e) {}
+          return { status: res.status, ok: res.ok, data };
+        } finally { clearTimeout(t); }
+      },
+      userKey(name) {
+        return 'users/' + String(name).trim().toLowerCase().replace(/[^a-z0-9-]/g, c => '_' + c.charCodeAt(0).toString(16) + '_');
+      },
+      pub(u) { return { id: u.id, username: u.username, name: u.name, dept: u.dept, perm: u.perm, status: u.status, createdAt: u.createdAt }; },
+      reply(ok, data) { return { ok, data: Object.assign({ server: 'delta' }, data) }; },
+      async ensureSeed() {
+        const r = await this.fb('GET', 'users/delta');
+        if (r.ok && r.data === null) {
+          const salt = 'seed-delta';
+          await this.fb('PUT', 'users/delta', { id: 1, username: 'delta', name: 'مسؤول النظام', dept: 'hq', perm: 'manager', status: 'approved', salt, hash: await sha256Hex(salt + '2026'), createdAt: new Date().toISOString() });
+        }
+      },
+      async verify(username, password) {
+        const r = await this.fb('GET', this.userKey(username));
+        if (!r.ok) throw new Error('denied');
+        const rec = r.data;
+        if (rec && rec.hash && (await sha256Hex(rec.salt + password)) === rec.hash) return rec;
+        return null;
+      },
+      async authManager(b) {
+        const m = await this.verify(String(b.username || '').trim(), String(b.password || ''));
+        return m && m.status === 'approved' && m.perm === 'manager' ? m : null;
+      },
+      async handle(path, b) {
+        if (path === '/api/ping') {
+          const r = await this.fb('GET', 'users', undefined, '?shallow=true');
+          return this.reply(r.ok, r.ok ? {} : { error: 'قاعدة البيانات رفضت الاتصال (راجع Rules)' });
+        }
+        if (path === '/api/register') {
+          const d = b.user || {};
+          const name = String(d.name || '').trim(), username = String(d.username || '').trim(), password = String(d.password || '');
+          if (!name || !username || !password) return this.reply(false, { error: 'أكمل جميع الحقول' });
+          if (username.length < 3) return this.reply(false, { error: 'اسم المستخدم قصير جداً' });
+          if (password.length < 4) return this.reply(false, { error: 'كلمة المرور قصيرة جداً' });
+          if (!['hq', 'factory'].includes(d.dept) || !['manager', 'employee'].includes(d.perm)) return this.reply(false, { error: 'بيانات القسم أو الصلاحية غير صحيحة' });
+          await this.ensureSeed();
+          const key = this.userKey(username);
+          const ex = await this.fb('GET', key);
+          if (!ex.ok) throw new Error('denied');
+          if (ex.data !== null) return this.reply(false, { error: 'اسم المستخدم مستخدم مسبقاً' });
+          const salt = randSalt();
+          const rec = { id: Date.now(), username, name, dept: d.dept, perm: d.perm, salt, hash: await sha256Hex(salt + password), status: 'pending', createdAt: new Date().toISOString() };
+          const w = await this.fb('PUT', key, rec);
+          if (!w.ok) throw new Error('denied');
+          return this.reply(true, {});
+        }
+        if (path === '/api/login') {
+          await this.ensureSeed();
+          const rec = await this.verify(String(b.username || '').trim(), String(b.password || ''));
+          if (!rec) return this.reply(false, { error: 'اسم المستخدم أو كلمة المرور غير صحيحة' });
+          if (rec.status === 'pending') return this.reply(false, { error: 'حسابك في انتظار موافقة المسؤول' });
+          if (rec.status === 'rejected') return this.reply(false, { error: 'تم رفض طلب انضمامك' });
+          return this.reply(true, { user: this.pub(rec) });
+        }
+        if (path === '/api/users/list') {
+          const m = await this.authManager(b);
+          if (!m) return this.reply(false, { error: 'الصلاحية للمدراء فقط' });
+          const r = await this.fb('GET', 'users');
+          if (!r.ok) throw new Error('denied');
+          const all = r.data ? Object.values(r.data) : [];
+          const primary = m.username === 'delta';
+          return this.reply(true, { users: all.filter(u => primary || u.dept === m.dept).map(u => this.pub(u)) });
+        }
+        if (path === '/api/users/status') {
+          if (!['approved', 'rejected'].includes(b.status)) return this.reply(false, { error: 'حالة غير صحيحة' });
+          const m = await this.authManager(b);
+          if (!m) return this.reply(false, { error: 'الصلاحية للمدراء فقط' });
+          const r = await this.fb('GET', 'users');
+          if (!r.ok) throw new Error('denied');
+          const target = Object.values(r.data || {}).find(u => u.id == b.targetId);
+          if (!target) return this.reply(false, { error: 'الطلب غير موجود' });
+          if (m.username !== 'delta' && target.dept !== m.dept) return this.reply(false, { error: 'يمكنك التعامل مع طلبات قسمك فقط' });
+          const w = await this.fb('PUT', this.userKey(target.username) + '/status', b.status);
+          if (!w.ok) throw new Error('denied');
+          return this.reply(true, {});
+        }
+        return this.reply(false, { error: 'غير معروف' });
+      },
+      // يرجّع null لو مفيش ربط/نت (وضع محلي)، وإلا { ok, data }
+      async call(path, body) {
+        try { return await this.handle(path, body || {}); }
+        catch (e) {
+          if (e && e.message === 'denied') return this.reply(false, { error: 'قاعدة البيانات رفضت الطلب (راجع Rules)' });
+          return null;
+        }
+      }
+    };
+
+    // المدير: يجيب المستخدمين/الطلبات من السيرفر ويدمجها محلياً
+    async function syncUsersFromServer() {
+      if (!currentUser || currentUser.perm !== 'manager') return;
+      const r = await API.call('/api/users/list', { username: currentUser.username, password: currentUser.password });
+      if (!r || !r.ok) return;
+      const users = DB.getUsers();
+      r.data.users.forEach(su => {
+        const i = users.findIndex(x => x.username === su.username);
+        if (i >= 0) users[i] = { ...users[i], ...su, password: users[i].password };
+        else users.push({ ...su, password: '' });
+      });
+      DB.setUsers(users);
+      updateNotifications();
+      renderPendingUsers();
+    }
+    let purchasesChart = null, suppliersPie = null;
+    let pendingPdfBase64 = null, pendingPdfName = null;
+    let currentUser = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set logo on auth screen from header logo if available
+      const logoImg = document.querySelector('.company-logo img');
+      const authLogo = document.getElementById('authLogoImg');
+      if (logoImg && authLogo) authLogo.src = logoImg.src;
+
+      updateDateTime(); setInterval(updateDateTime, 30000);
+      checkAuth();
+
+      // تحديث تلقائي: بين التابات في نفس المتصفح + سحب من السيرفر كل 8 ثواني
+      window.addEventListener('storage', e => { if (e.key === 'delta_users' && currentUser) { updateNotifications(); renderPendingUsers(); } });
+      setInterval(() => { if (currentUser) syncUsersFromServer(); }, 8000);
+
+      document.getElementById('loginPass')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+      document.getElementById('loginUser')?.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+    });
+
+    function checkAuth() {
+      const session = DB.getSession();
+      if (session && session.username) {
+        const users = DB.getUsers();
+        const u = users.find(x => x.username === session.username && x.status === 'approved');
+        if (u) {
+          currentUser = u;
+          enterApp(u);
+          return;
+        }
+      }
+      showAuth();
+    }
+
+    function showAuth() {
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('appRoot').classList.add('hidden');
+      currentUser = null;
+    }
+
+    function enterApp(u) {
+      currentUser = u;
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('appRoot').classList.remove('hidden');
+      // sync settings from user
+      const s = DB.getSettings();
+      s.userName = u.name;
+      s.userRole = u.dept === 'hq' ? 'المركز الرئيسي' : 'المصنع';
+      s.userPerm = u.perm;
+      DB.setSettings(s);
+      document.getElementById('currentUserName').textContent = u.name;
+      document.getElementById('currentUserRole').textContent = (u.perm === 'manager' ? 'مدير' : 'موظف') + ' — ' + (u.dept === 'hq' ? 'المركز الرئيسي' : 'المصنع');
+      loadSettingsToForm();
+      refreshAll();
+      renderPendingUsers();
+      syncUsersFromServer();
+    }
+
+    function showAuthTab(tab) {
+      document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('formRegister').style.display = tab === 'register' ? 'block' : 'none';
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      document.getElementById('authError').classList.remove('show');
+      document.getElementById('authSuccess').classList.remove('show');
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('authError');
+      el.textContent = msg; el.classList.add('show');
+      document.getElementById('authSuccess').classList.remove('show');
+    }
+    function showAuthSuccess(msg) {
+      const el = document.getElementById('authSuccess');
+      el.textContent = msg; el.classList.add('show');
+      document.getElementById('authError').classList.remove('show');
+    }
+
+    async function doLogin() {
+      const username = document.getElementById('loginUser').value.trim();
+      const password = document.getElementById('loginPass').value;
+      if (!username || !password) { showAuthError('أدخل اسم المستخدم وكلمة المرور'); return; }
+      // 1) السيرفر لو متاح
+      const r = await API.call('/api/login', { username, password });
+      if (r) {
+        if (!r.ok) { showAuthError(r.data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة'); return; }
+        const merged = { ...r.data.user, password };
+        const users = DB.getUsers();
+        const i = users.findIndex(x => x.username === merged.username);
+        if (i >= 0) users[i] = merged; else users.push(merged);
+        DB.setUsers(users);
+        DB.setSession({ username: merged.username });
+        enterApp(merged);
+        return;
+      }
+      // 2) وضع محلي (بدون سيرفر)
+      const users = DB.getUsers();
+      const u = users.find(x => x.username === username && x.password === password);
+      if (!u) { showAuthError('اسم المستخدم أو كلمة المرور غير صحيحة'); return; }
+      if (u.status === 'pending') { showAuthError('حسابك في انتظار موافقة المسؤول'); return; }
+      if (u.status === 'rejected') { showAuthError('تم رفض طلب انضمامك'); return; }
+      DB.setSession({ username: u.username });
+      enterApp(u);
+    }
+
+    async function doRegister() {
+      const name = document.getElementById('regName').value.trim();
+      const username = document.getElementById('regUser').value.trim();
+      const password = document.getElementById('regPass').value;
+      const dept = document.getElementById('regDept').value;
+      const perm = document.getElementById('regPerm').value;
+      if (!name || !username || !password) { showAuthError('أكمل جميع الحقول'); return; }
+      if (username.length < 3) { showAuthError('اسم المستخدم قصير جداً'); return; }
+      if (password.length < 4) { showAuthError('كلمة المرور قصيرة جداً'); return; }
+      const who = dept === 'hq' ? 'المركز الرئيسي' : 'المصنع';
+      let msg;
+      const r = await API.call('/api/register', { user: { name, username, password, dept, perm } });
+      if (r) {
+        if (!r.ok) { showAuthError(r.data.error || 'تعذر إرسال الطلب'); return; }
+        msg = 'تم إرسال طلب الانضمام. انتظر موافقة مسؤول ' + who;
+      } else {
+        showAuthError(API.base() ? 'تعذر الاتصال بقاعدة البيانات، اتأكد من الإنترنت وحاول تاني.' : 'الربط السحابي غير مضبوط في الملف (CLOUD_URL). تواصل مع مسؤول النظام.');
+        return;
+      }
+      showAuthSuccess(msg);
+      document.getElementById('regName').value = '';
+      document.getElementById('regUser').value = '';
+      document.getElementById('regPass').value = '';
+    }
+
+    function doLogout() {
+      DB.setSession(null);
+      currentUser = null;
+      showAuth();
+      document.getElementById('loginUser').value = '';
+      document.getElementById('loginPass').value = '';
+    }
+
+    function renderPendingUsers() {
+      const el = document.getElementById('pendingUsersTable');
+      if (!el) return;
+      if (!currentUser || currentUser.perm !== 'manager') {
+        el.innerHTML = '<div class="empty-state"><p>صلاحية الموافقة للمدراء فقط</p></div>';
+        return;
+      }
+      const users = DB.getUsers();
+      // Primary admin (delta) sees all; other managers see their dept only
+      const isPrimary = currentUser.username === 'delta';
+      const pending = users.filter(u => u.status === 'pending' && (isPrimary || u.dept === currentUser.dept));
+      if (!pending.length) {
+        el.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>لا توجد طلبات انضمام معلقة</p></div>';
+        return;
+      }
+      el.innerHTML = `<table><thead><tr><th>الاسم</th><th>المستخدم</th><th>القسم</th><th>الصلاحية</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+        <tbody>${pending.map(u => `<tr>
+          <td>${esc(u.name)}</td><td>${esc(u.username)}</td>
+          <td>${u.dept === 'hq' ? 'المركز الرئيسي' : 'المصنع'}</td>
+          <td>${u.perm === 'manager' ? 'مدير' : 'موظف'}</td>
+          <td>${(u.createdAt||'').slice(0,10)}</td>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="approveUser(${u.id})">موافقة</button>
+            <button class="btn btn-sm btn-danger" onclick="rejectUser(${u.id})">رفض</button>
+          </td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    async function setUserStatus(id, status) {
+      if (!currentUser || currentUser.perm !== 'manager') return null;
+      const users = DB.getUsers();
+      const u = users.find(x => x.id === id);
+      const isPrimary = currentUser.username === 'delta';
+      if (!u || (!isPrimary && u.dept !== currentUser.dept)) { alert('يمكنك التعامل مع طلبات قسمك فقط'); return null; }
+      const r = await API.call('/api/users/status', { username: currentUser.username, password: currentUser.password, targetId: id, status });
+      if (r && !r.ok) { alert(r.data.error || 'فشل تنفيذ العملية'); return null; }
+      u.status = status;
+      DB.setUsers(users);
+      renderPendingUsers();
+      updateNotifications();
+      return u;
+    }
+    async function approveUser(id) { const u = await setUserStatus(id, 'approved'); if (u) alert('تمت الموافقة على ' + u.name); }
+    async function rejectUser(id) { const u = await setUserStatus(id, 'rejected'); if (u) alert('تم رفض الطلب'); }
+
+    function updateDateTime() {
+      const now = new Date();
+      const days = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+      const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      let h = now.getHours(); const m = String(now.getMinutes()).padStart(2,'0');
+      const ampm = h >= 12 ? 'م' : 'ص'; h = h % 12 || 12;
+      document.getElementById('currentDateTime').textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} | ${h}:${m} ${ampm}`;
+    }
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById('section-' + id).classList.add('active');
+      document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+      const btn = Array.from(document.querySelectorAll('.sidebar-item')).find(b => b.getAttribute('onclick')?.includes("'"+id+"'"));
+      if (btn) btn.classList.add('active');
+      // close mobile sidebar
+      document.querySelector('.sidebar')?.classList.remove('open');
+      document.getElementById('sidebarOverlay')?.classList.remove('show');
+      refreshAll();
+    }
+
+    function showSettingsTab(tab, el) {
+      document.querySelectorAll('.settings-pane').forEach(p => p.style.display = 'none');
+      document.getElementById('settings-' + tab).style.display = 'block';
+      document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function refreshAll() {
+      const purchases = DB.get('purchases'), suppliers = DB.get('suppliers'), inventory = DB.get('inventory');
+      const totalValue = purchases.reduce((s,p) => s + (Number(p.value)||0), 0);
+      document.getElementById('kpiTotalValue').textContent = totalValue.toLocaleString('ar-EG');
+      document.getElementById('kpiOrdersCount').textContent = purchases.length;
+      document.getElementById('kpiSuppliersCount').textContent = suppliers.length;
+      document.getElementById('kpiPendingCount').textContent = purchases.filter(p => p.status==='pending'||p.status==='review').length;
+      document.getElementById('kpiItemsCount').textContent = inventory.length;
+      renderPurchasesTable(); renderOrdersTable(); renderSuppliersTable(); renderInventoryTable();
+      renderReceiptsTable(); renderShippingTable(); renderApprovalsTable(); renderContactsTable(); renderFactories(); renderDashTables(); updateCharts();
+      updateNotifications();
+    }
+
+    function updateNotifications() {
+      const purchases = DB.get('purchases');
+      const orders = DB.get('orders');
+      const users = DB.getUsers();
+      const notifs = [];
+
+      // Pending / review purchase requests
+      purchases.filter(p => p.status === 'pending' || p.status === 'review').forEach(p => {
+        notifs.push({
+          type: 'purchase',
+          icon: 'fa-file-invoice',
+          title: 'طلب شراء ' + (p.status === 'review' ? 'قيد المراجعة' : 'جديد'),
+          desc: (p.number || 'بدون رقم') + ' — ' + (p.supplier || 'مورد') + ' — ' + Number(p.value||0).toLocaleString('ar-EG') + ' ج.م',
+          section: 'purchases'
+        });
+      });
+
+      // All recent purchases as activity (if not already pending)
+      purchases.filter(p => p.status === 'approved' || p.status === 'completed').slice(0, 3).forEach(p => {
+        notifs.push({
+          type: 'purchase',
+          icon: 'fa-check-circle',
+          title: 'طلب شراء معتمد',
+          desc: (p.number || '') + ' — ' + (p.supplier || ''),
+          section: 'purchases'
+        });
+      });
+
+      // Pending join requests (for managers)
+      if (currentUser && currentUser.perm === 'manager') {
+        const isPrimary = currentUser.username === 'delta';
+        users.filter(u => u.status === 'pending' && (isPrimary || u.dept === currentUser.dept)).forEach(u => {
+          notifs.push({
+            type: 'join',
+            icon: 'fa-user-plus',
+            title: 'طلب انضمام جديد',
+            desc: esc(u.name) + ' (' + esc(u.username) + ') — ' + (u.dept === 'hq' ? 'المركز الرئيسي' : 'المصنع'),
+            section: 'settings'
+          });
+        });
+      }
+
+      // Pending orders
+      orders.filter(o => o.status === 'pending').forEach(o => {
+        notifs.push({
+          type: 'order',
+          icon: 'fa-file-contract',
+          title: 'أمر شراء معلّق',
+          desc: (o.number || '') + ' — ' + (o.supplier || ''),
+          section: 'orders'
+        });
+      });
+
+      // Approvals needed
+      const needApproval = purchases.filter(p => p.status === 'pending' || p.status === 'review');
+      if (needApproval.length && currentUser && currentUser.perm === 'manager') {
+        // already listed as purchases; add summary if many
+      }
+
+      const badge = document.getElementById('notifBadge');
+      const sideCount = document.getElementById('sideNotifCount');
+      const panelCount = document.getElementById('notifPanelCount');
+      const list = document.getElementById('notifList');
+      const count = notifs.length;
+
+      if (badge) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.classList.toggle('hidden', count === 0);
+      }
+      if (sideCount) sideCount.textContent = count + ' إشعارات';
+      if (panelCount) panelCount.textContent = count + ' إشعار';
+
+      if (list) {
+        if (!count) {
+          list.innerHTML = '<div class="notif-empty"><i class="fas fa-bell-slash" style="font-size:24px;opacity:0.4;display:block;margin-bottom:8px;"></i>لا توجد إشعارات حالياً</div>';
+        } else {
+          list.innerHTML = notifs.map(n => `
+            <div class="notif-item" onclick="openNotif('${n.section}')">
+              <div class="ni-icon ${n.type}"><i class="fas ${n.icon}"></i></div>
+              <div class="ni-body">
+                <div class="ni-title">${n.title}</div>
+                <div class="ni-desc">${n.desc}</div>
+              </div>
+            </div>`).join('');
+        }
+      }
+    }
+
+    function toggleNotifPanel(e) {
+      e.stopPropagation();
+      const panel = document.getElementById('notifPanel');
+      panel.classList.toggle('open');
+    }
+
+    function openNotif(section) {
+      document.getElementById('notifPanel')?.classList.remove('open');
+      if (section === 'settings') {
+        showSection('settings');
+        // open approvals tab
+        const tab = document.querySelector('.settings-tab[onclick*="approvals"]');
+        if (tab) showSettingsTab('approvals', tab);
+        renderPendingUsers();
+      } else {
+        showSection(section);
+      }
+    }
+
+    // Close notif panel when clicking outside
+    document.addEventListener('click', (e) => {
+      const wrap = document.querySelector('.notif-wrap');
+      const panel = document.getElementById('notifPanel');
+      if (panel && wrap && !wrap.contains(e.target)) panel.classList.remove('open');
+    });
+
+    function emptyHTML(msg) { return `<div class="empty-state"><i class="fas fa-inbox"></i><p>${msg}</p></div>`; }
+
+    function renderPurchasesTable() {
+      const data = DB.get('purchases'); const el = document.getElementById('purchasesTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد طلبات شراء بعد.'); return; }
+      el.innerHTML = `<table><thead><tr><th>م</th><th>رقم الطلب</th><th>المورد</th><th>القيمة</th><th>الحالة</th><th>المرفق</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((p,i) => `<tr>
+          <td>${i+1}</td><td>${p.number||'-'}</td><td>${p.supplier||'-'}</td>
+          <td>${Number(p.value||0).toLocaleString('ar-EG')} ج.م</td>
+          <td><span class="status ${statusClass(p.status)}">${statusLabel(p.status)}</span></td>
+          <td>${p.pdfData ? `<span class="pdf-link" onclick="viewPdf(${i})"><i class="fas fa-file-pdf"></i> عرض PDF</span>` : '-'}</td>
+          <td>${p.date||'-'}</td>
+          <td>${delBtn('purchases',i)}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderOrdersTable() {
+      const data = DB.get('orders'); const el = document.getElementById('ordersTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد أوامر شراء بعد.'); return; }
+      el.innerHTML = `<table><thead><tr><th>م</th><th>رقم الأمر</th><th>المورد</th><th>القيمة</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((o,i) => `<tr>
+          <td>${i+1}</td><td>${o.number||'-'}</td><td>${o.supplier||'-'}</td>
+          <td>${Number(o.value||0).toLocaleString('ar-EG')}</td>
+          <td><span class="status ${statusClass(o.status)}">${statusLabel(o.status)}</span></td>
+          <td>${o.date||'-'}</td>
+          <td>${delBtn('orders',i)}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderSuppliersTable() {
+      const data = DB.get('suppliers'); const el = document.getElementById('suppliersTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا يوجد موردون.'); return; }
+      el.innerHTML = `<table><thead><tr><th>م</th><th>اسم المورد</th><th>الهاتف</th><th>البريد</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((s,i) => `<tr>
+          <td>${i+1}</td><td>${s.name||'-'}</td><td>${s.phone||'-'}</td><td>${s.email||'-'}</td>
+          <td><span class="status ${s.active?'ok':'danger'}">${s.active?'نشط':'غير نشط'}</span></td>
+          <td>${delBtn('suppliers',i)}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderInventoryTable() {
+      const data = DB.get('inventory'); const el = document.getElementById('inventoryTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد أصناف.'); return; }
+      el.innerHTML = `<table><thead><tr><th>الصنف</th><th>الكمية</th><th>أقل حد</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((item,i) => { const low = Number(item.qty)<Number(item.min);
+          return `<tr><td>${item.name||'-'}</td><td>${item.qty||0}</td><td>${item.min||0}</td>
+          <td><span class="status ${low?'warn':'ok'}">${low?'منخفض':'متوفر'}</span></td>
+          <td>${delBtn('inventory',i)}</td></tr>`; }).join('')}</tbody></table>`;
+    }
+
+    function renderReceiptsTable() {
+      const data = DB.get('receipts'); const el = document.getElementById('receiptsTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد استلامات مسجلة.'); return; }
+      el.innerHTML = `<table><thead><tr><th>م</th><th>رقم الاستلام</th><th>المورد</th><th>الصنف</th><th>الكمية</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((r,i) => `<tr>
+          <td>${i+1}</td><td>${r.number||'-'}</td><td>${r.supplier||'-'}</td><td>${r.item||'-'}</td>
+          <td>${r.qty||0}</td><td>${r.date||'-'}</td>
+          <td>${delBtn('receipts',i)}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderShippingTable() {
+      const data = DB.get('shipping'); const el = document.getElementById('shippingTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد شحنات مسجلة.'); return; }
+      el.innerHTML = `<table><thead><tr><th>م</th><th>رقم الشحنة</th><th>المورد</th><th>المنشأ</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((s,i) => `<tr>
+          <td>${i+1}</td><td>${s.number||'-'}</td><td>${s.supplier||'-'}</td><td>${s.origin||'-'}</td>
+          <td><span class="status ${statusClass(s.status)}">${statusLabel(s.status)}</span></td>
+          <td>${s.date||'-'}</td>
+          <td>${delBtn('shipping',i)}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderApprovalsTable() {
+      const data = DB.get('purchases').filter(p => p.status==='pending'||p.status==='review');
+      const el = document.getElementById('approvalsTable');
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد طلبات تحتاج موافقة.'); return; }
+      el.innerHTML = `<table><thead><tr><th>رقم الطلب</th><th>المورد</th><th>القيمة</th><th>مستوى الموافقة</th><th>التاريخ</th></tr></thead>
+        <tbody>${data.map(p => `<tr>
+          <td>${p.number||'-'}</td><td>${p.supplier||'-'}</td><td>${Number(p.value||0).toLocaleString('ar-EG')}</td>
+          <td><span class="status info">${p.approvalLevel||'مدير المشتريات'}</span></td><td>${p.date||'-'}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderContactsTable() {
+      const data = DB.get('contacts');
+      const el = document.getElementById('contactsTable');
+      if (!el) return;
+      if (!data.length) { el.innerHTML = emptyHTML('لا توجد جهات اتصال. اضغط "إضافة جهة اتصال" لإضافة أرقام المدراء والموظفين.'); return; }
+      el.innerHTML = `<table><thead><tr><th>م</th><th>الاسم</th><th>المسمى</th><th>القسم</th><th>رقم الهاتف</th><th>ملاحظات</th><th>إجراءات</th></tr></thead>
+        <tbody>${data.map((c,i) => `<tr>
+          <td>${i+1}</td><td>${c.name||'-'}</td><td>${c.position||'-'}</td>
+          <td><span class="status ${c.dept==='المصنع'?'warn':'info'}">${c.dept||'-'}</span></td>
+          <td><a href="tel:${c.phone}" style="color:#60a5fa;">${c.phone||'-'}</a></td>
+          <td>${c.notes||'-'}</td>
+          <td>${delBtn('contacts',i)}</td>
+        </tr>`).join('')}</tbody></table>`;
+    }
+
+    function renderFactories() {
+      const el = document.getElementById('factoriesContent');
+      if (!el) return;
+      const contacts = DB.get('contacts');
+      const factoryContacts = contacts.filter(c => c.dept === 'المصنع');
+      const adminContacts = contacts.filter(c => c.dept === 'الإدارة');
+
+      function contactsHTML(list) {
+        if (!list.length) return '<div class="no-contacts">لا توجد أرقام مسجلة بعد — أضفها من جهات الاتصال</div>';
+        return list.map(c => `
+          <div class="contact-row">
+            <div>
+              <div class="name">${c.name || '-'}</div>
+              <div class="pos">${c.position || ''}</div>
+            </div>
+            <a href="tel:${c.phone || ''}"><i class="fas fa-phone"></i> ${c.phone || '-'}</a>
+          </div>`).join('');
+      }
+
+      el.innerHTML = `
+        <div class="location-cards">
+          <div class="location-card">
+            <img src="https://img.youm7.com/xlarge/202610170144334433_541.jpg" alt="مصنع الدلتا للسكر" style="height:180px;">
+            <div class="body">
+              <h3><i class="fas fa-industry" style="color:#f59e0b;"></i> مصنع الدلتا للسكر - كفر الشيخ</h3>
+              <p>المصنع الرئيسي لإنتاج السكر من البنجر. طاقة استيعابية عالية وخطوط إنتاج متطورة.</p>
+              <div class="meta"><span><i class="fas fa-map-marker-alt"></i> الحامول - كفر الشيخ</span><span><i class="fas fa-cogs"></i> خطين إنتاج</span></div>
+              <div class="location-contacts">
+                <h4><i class="fas fa-phone-alt"></i> أرقام المصنع</h4>
+                ${contactsHTML(factoryContacts)}
+              </div>
+            </div>
+          </div>
+          <div class="location-card">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80" alt="المركز الرئيسي" style="height:180px;object-fit:cover;">
+            <div class="body">
+              <h3><i class="fas fa-building" style="color:#3b82f6;"></i> المركز الرئيسي - الجيزة</h3>
+              <p>المقر الإداري الرئيسي للشركة. إدارة المشتريات والمالية والموارد البشرية.</p>
+              <div class="meta"><span><i class="fas fa-map-marker-alt"></i> الجيزة - العجوزة</span><span><i class="fas fa-users"></i> الإدارة المركزية</span></div>
+              <div class="location-contacts">
+                <h4><i class="fas fa-phone-alt"></i> أرقام الإدارة</h4>
+                ${contactsHTML(adminContacts)}
+              </div>
+            </div>
+          </div>
+          <div class="location-card">
+            <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="الإدارة العليا" style="height:180px;object-fit:cover;">
+            <div class="body">
+              <h3><i class="fas fa-user-tie" style="color:#a78bfa;"></i> الإدارة العليا</h3>
+              <p>مجلس الإدارة والعضو المنتدب. الاعتمادات النهائية والموافقات الاستراتيجية.</p>
+              <div class="meta"><span><i class="fas fa-shield-alt"></i> اعتمادات عليا</span></div>
+              <div class="location-contacts">
+                <h4><i class="fas fa-phone-alt"></i> أرقام الإدارة العليا</h4>
+                ${contactsHTML(adminContacts)}
+              </div>
+            </div>
+          </div>
+          <div class="location-card">
+            <img src="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80" alt="المخازن" style="height:180px;object-fit:cover;">
+            <div class="body">
+              <h3><i class="fas fa-warehouse" style="color:#10b981;"></i> المخازن والمستودعات</h3>
+              <p>مخازن السكر الخام والمكرر والمولاس وأكياس التغليف والمواد الكيماوية.</p>
+              <div class="meta"><span><i class="fas fa-boxes"></i> أصناف متعددة</span></div>
+              <div class="location-contacts">
+                <h4><i class="fas fa-phone-alt"></i> أرقام المخازن</h4>
+                ${contactsHTML(factoryContacts)}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function renderDashTables() {
+      const purchases = DB.get('purchases').slice(0,5);
+      const dashP = document.getElementById('dashPurchasesTable');
+      if (!purchases.length) dashP.innerHTML = emptyHTML('لا توجد طلبات');
+      else dashP.innerHTML = `<table><thead><tr><th>رقم الطلب</th><th>المورد</th><th>القيمة</th><th>الحالة</th></tr></thead>
+        <tbody>${purchases.map(p => `<tr><td>${p.number||'-'}</td><td>${p.supplier||'-'}</td>
+        <td>${Number(p.value||0).toLocaleString('ar-EG')}</td>
+        <td><span class="status ${statusClass(p.status)}">${statusLabel(p.status)}</span></td></tr>`).join('')}</tbody></table>`;
+      const pending = DB.get('purchases').filter(p => p.status==='pending'||p.status==='review').slice(0,4);
+      const dashA = document.getElementById('dashApprovalsTable');
+      if (!pending.length) dashA.innerHTML = emptyHTML('لا توجد');
+      else dashA.innerHTML = `<table><thead><tr><th>الطلب</th><th>القيمة</th><th>المستوى</th></tr></thead>
+        <tbody>${pending.map(p => `<tr><td>${p.number||'-'}</td><td>${Number(p.value||0).toLocaleString('ar-EG')}</td>
+        <td><span class="status info">${p.approvalLevel||'مدير المشتريات'}</span></td></tr>`).join('')}</tbody></table>`;
+      const inv = DB.get('inventory').slice(0,5);
+      const dashI = document.getElementById('dashInventoryTable');
+      if (!inv.length) dashI.innerHTML = emptyHTML('لا توجد أصناف');
+      else dashI.innerHTML = `<table><thead><tr><th>الصنف</th><th>الكمية</th><th>الحالة</th></tr></thead>
+        <tbody>${inv.map(item => { const low=Number(item.qty)<Number(item.min);
+          return `<tr><td>${item.name}</td><td>${item.qty}</td><td><span class="status ${low?'warn':'ok'}">${low?'منخفض':'متوفر'}</span></td></tr>`; }).join('')}</tbody></table>`;
+    }
+
+    function statusClass(s) {
+      if (['received','accepted','delivered'].includes(s)) return 'ok';
+      if (['in-progress','shipping'].includes(s)) return 'warn';
+      if (['review','pending'].includes(s)) return 'danger';
+      return 'info';
+    }
+    function statusLabel(s) {
+      const map = { received:'تم الاستلام','in-progress':'قيد التنفيذ',review:'قيد المراجعة',accepted:'مقبول',pending:'في انتظار الموافقة',delivered:'تم التسليم',shipping:'قيد الشحن' };
+      return map[s] || s || '-';
+    }
+
+    function updateCharts() {
+      const purchases = DB.get('purchases');
+      const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      const values = new Array(6).fill(0), counts = new Array(6).fill(0);
+      const now = new Date();
+      purchases.forEach(p => {
+        if (!p.date) return;
+        const d = new Date(p.date);
+        const diff = (now.getFullYear()-d.getFullYear())*12 + (now.getMonth()-d.getMonth());
+        if (diff>=0 && diff<6) { values[5-diff] += Number(p.value)||0; counts[5-diff]++; }
+      });
+      const labels = [];
+      for (let i=5;i>=0;i--) { const m = new Date(now.getFullYear(), now.getMonth()-i, 1); labels.push(months[m.getMonth()]); }
+      if (purchasesChart) purchasesChart.destroy();
+      const ctx1 = document.getElementById('purchasesChart');
+      if (ctx1) purchasesChart = new Chart(ctx1.getContext('2d'), {
+        type:'bar', data:{ labels, datasets:[
+          { type:'bar', label:'القيمة', data:values, backgroundColor:'rgba(59,130,246,0.85)', borderRadius:5, order:2 },
+          { type:'line', label:'عدد الأوامر', data:counts, borderColor:'#34d399', borderWidth:2.5, pointRadius:4, tension:0.3, yAxisID:'y1', order:1 }
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+          scales:{ x:{grid:{display:false},ticks:{color:'#8b9bb4',font:{family:'Cairo',size:11}}},
+            y:{position:'right',grid:{color:'rgba(30,45,69,0.5)'},ticks:{color:'#8b9bb4',font:{family:'Cairo',size:10}}},
+            y1:{position:'left',grid:{display:false},ticks:{color:'#34d399',font:{family:'Cairo',size:10}}} } }
+      });
+      const bySupp = {};
+      purchases.forEach(p => { const n = p.supplier||'أخرى'; bySupp[n] = (bySupp[n]||0) + (Number(p.value)||0); });
+      const pieLabels = Object.keys(bySupp), pieData = Object.values(bySupp);
+      const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#6b7280','#ec4899','#14b8a6'];
+      if (suppliersPie) suppliersPie.destroy();
+      const ctx2 = document.getElementById('suppliersPie');
+      if (ctx2) suppliersPie = new Chart(ctx2.getContext('2d'), {
+        type:'doughnut', data:{ labels: pieLabels.length?pieLabels:['لا توجد بيانات'], datasets:[{ data:pieData.length?pieData:[1], backgroundColor:pieLabels.length?colors:['#1e2d45'], borderWidth:0 }] },
+        options:{ responsive:true, maintainAspectRatio:false, cutout:'65%', plugins:{ legend:{ position:'left', labels:{ color:'#8b9bb4', font:{family:'Cairo',size:11}, boxWidth:12 } } } }
+      });
+    }
+
+    function openModal(type) {
+      pendingPdfBase64 = null; pendingPdfName = null;
+      const modal = document.getElementById('modal'), title = document.getElementById('modalTitle'), body = document.getElementById('modalBody');
+      if (type === 'purchase') {
+        title.textContent = 'طلب شراء جديد';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>رقم الطلب</label><input id="f_number" placeholder="PO-2025-0001"></div>
+          <div class="form-group"><label>التاريخ</label><input type="date" id="f_date"></div>
+          <div class="form-group"><label>المورد</label><input id="f_supplier" placeholder="اسم المورد"></div>
+          <div class="form-group"><label>القيمة (ج.م)</label><input type="number" id="f_value" placeholder="0"></div>
+          <div class="form-group"><label>الحالة</label><select id="f_status"><option value="pending">في انتظار الموافقة</option><option value="review">قيد المراجعة</option><option value="in-progress">قيد التنفيذ</option><option value="accepted">مقبول</option><option value="received">تم الاستلام</option></select></div>
+          <div class="form-group"><label>مستوى الموافقة</label><select id="f_level"><option>مدير المشتريات</option><option>الإدارة العليا</option><option>المصنع</option></select></div>
+          <div class="form-group full"><label>مرفق PDF (اختياري)</label>
+            <input type="file" id="f_pdf" accept=".pdf,application/pdf" onchange="handlePdfUpload(this)">
+            <div class="file-preview" id="pdfPreview"></div>
+          </div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary" onclick="savePurchase()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+        document.getElementById('f_date').valueAsDate = new Date();
+      } else if (type === 'order') {
+        title.textContent = 'أمر شراء جديد';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>رقم الأمر</label><input id="f_number"></div>
+          <div class="form-group"><label>التاريخ</label><input type="date" id="f_date"></div>
+          <div class="form-group"><label>المورد</label><input id="f_supplier"></div>
+          <div class="form-group"><label>القيمة</label><input type="number" id="f_value"></div>
+          <div class="form-group"><label>الحالة</label><select id="f_status"><option value="pending">في الانتظار</option><option value="in-progress">قيد التنفيذ</option><option value="accepted">مقبول</option></select></div>
+        </div><div class="form-actions"><button class="btn btn-primary" onclick="saveOrder()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+        document.getElementById('f_date').valueAsDate = new Date();
+      } else if (type === 'supplier') {
+        title.textContent = 'إضافة مورد';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>اسم المورد</label><input id="f_name"></div>
+          <div class="form-group"><label>الهاتف</label><input id="f_phone"></div>
+          <div class="form-group full"><label>البريد</label><input id="f_email" type="email"></div>
+          <div class="form-group"><label>الحالة</label><select id="f_active"><option value="1">نشط</option><option value="0">غير نشط</option></select></div>
+        </div><div class="form-actions"><button class="btn btn-primary" onclick="saveSupplier()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+      } else if (type === 'item') {
+        title.textContent = 'إضافة صنف';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>اسم الصنف</label><input id="f_name"></div>
+          <div class="form-group"><label>الكمية</label><input type="number" id="f_qty" value="0"></div>
+          <div class="form-group"><label>أقل حد</label><input type="number" id="f_min" value="0"></div>
+        </div><div class="form-actions"><button class="btn btn-primary" onclick="saveItem()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+      } else if (type === 'receipt') {
+        title.textContent = 'تسجيل استلام';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>رقم الاستلام</label><input id="f_number"></div>
+          <div class="form-group"><label>التاريخ</label><input type="date" id="f_date"></div>
+          <div class="form-group"><label>المورد</label><input id="f_supplier"></div>
+          <div class="form-group"><label>الصنف</label><input id="f_item"></div>
+          <div class="form-group"><label>الكمية</label><input type="number" id="f_qty"></div>
+        </div><div class="form-actions"><button class="btn btn-primary" onclick="saveReceipt()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+        document.getElementById('f_date').valueAsDate = new Date();
+      } else if (type === 'shipping') {
+        title.textContent = 'إضافة شحنة';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>رقم الشحنة</label><input id="f_number"></div>
+          <div class="form-group"><label>التاريخ</label><input type="date" id="f_date"></div>
+          <div class="form-group"><label>المورد</label><input id="f_supplier"></div>
+          <div class="form-group"><label>المنشأ</label><input id="f_origin"></div>
+          <div class="form-group"><label>الحالة</label><select id="f_status"><option value="pending">في الانتظار</option><option value="shipping">قيد الشحن</option><option value="delivered">تم التسليم</option></select></div>
+        </div><div class="form-actions"><button class="btn btn-primary" onclick="saveShipping()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+        document.getElementById('f_date').valueAsDate = new Date();
+      } else if (type === 'contact') {
+        title.textContent = 'إضافة جهة اتصال';
+        body.innerHTML = `<div class="form-grid">
+          <div class="form-group"><label>الاسم</label><input id="f_name" placeholder="اسم المدير أو الموظف"></div>
+          <div class="form-group"><label>المسمى الوظيفي</label><input id="f_position" placeholder="مثال: مدير المشتريات"></div>
+          <div class="form-group"><label>القسم</label>
+            <select id="f_dept">
+              <option value="المصنع">المصنع</option>
+              <option value="الإدارة">الإدارة / المركز الرئيسي</option>
+            </select>
+          </div>
+          <div class="form-group"><label>رقم الهاتف</label><input id="f_phone" type="tel" placeholder="01xxxxxxxxx"></div>
+          <div class="form-group full"><label>ملاحظات</label><input id="f_notes" placeholder="اختياري"></div>
+        </div><div class="form-actions"><button class="btn btn-primary" onclick="saveContact()"><i class="fas fa-save"></i> حفظ</button><button class="btn btn-outline" onclick="closeModal()">إلغاء</button></div>`;
+      }
+      modal.classList.add('show');
+    }
+
+    function closeModal() { document.getElementById('modal').classList.remove('show'); }
+
+    function handlePdfUpload(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (file.type !== 'application/pdf') { alert('الرجاء اختيار ملف PDF فقط'); input.value=''; return; }
+      if (file.size > 2 * 1024 * 1024) { alert('حجم الملف كبير جداً (الحد الأقصى 2 ميجا)'); input.value=''; return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        pendingPdfBase64 = e.target.result;
+        pendingPdfName = file.name;
+        document.getElementById('pdfPreview').innerHTML = `<i class="fas fa-file-pdf"></i> ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function viewPdf(index) {
+      const p = DB.get('purchases')[index];
+      if (!p || !p.pdfData) return;
+      const win = window.open();
+      win.document.write(`<iframe src="${p.pdfData}" width="100%" height="100%" style="border:none;"></iframe>`);
+    }
+
+    function savePurchase() {
+      const data = DB.get('purchases');
+      data.push({
+        number: document.getElementById('f_number').value.trim(),
+        date: document.getElementById('f_date').value,
+        supplier: document.getElementById('f_supplier').value.trim(),
+        value: document.getElementById('f_value').value,
+        status: document.getElementById('f_status').value,
+        approvalLevel: document.getElementById('f_level').value,
+        pdfData: pendingPdfBase64 || null,
+        pdfName: pendingPdfName || null
+      });
+      DB.set('purchases', data); closeModal(); refreshAll();
+    }
+    function saveOrder() {
+      const data = DB.get('orders');
+      data.push({ number: document.getElementById('f_number').value.trim(), date: document.getElementById('f_date').value, supplier: document.getElementById('f_supplier').value.trim(), value: document.getElementById('f_value').value, status: document.getElementById('f_status').value });
+      DB.set('orders', data); closeModal(); refreshAll();
+    }
+    function saveSupplier() {
+      const data = DB.get('suppliers');
+      data.push({ name: document.getElementById('f_name').value.trim(), phone: document.getElementById('f_phone').value.trim(), email: document.getElementById('f_email').value.trim(), active: document.getElementById('f_active').value==='1' });
+      DB.set('suppliers', data); closeModal(); refreshAll();
+    }
+    function saveItem() {
+      const data = DB.get('inventory');
+      data.push({ name: document.getElementById('f_name').value.trim(), qty: document.getElementById('f_qty').value, min: document.getElementById('f_min').value });
+      DB.set('inventory', data); closeModal(); refreshAll();
+    }
+    function saveReceipt() {
+      const data = DB.get('receipts');
+      data.push({ number: document.getElementById('f_number').value.trim(), date: document.getElementById('f_date').value, supplier: document.getElementById('f_supplier').value.trim(), item: document.getElementById('f_item').value.trim(), qty: document.getElementById('f_qty').value });
+      DB.set('receipts', data); closeModal(); refreshAll();
+    }
+    function saveShipping() {
+      const data = DB.get('shipping');
+      data.push({ number: document.getElementById('f_number').value.trim(), date: document.getElementById('f_date').value, supplier: document.getElementById('f_supplier').value.trim(), origin: document.getElementById('f_origin').value.trim(), status: document.getElementById('f_status').value });
+      DB.set('shipping', data); closeModal(); refreshAll();
+    }
+    function saveContact() {
+      const data = DB.get('contacts');
+      data.push({
+        name: document.getElementById('f_name').value.trim(),
+        position: document.getElementById('f_position').value.trim(),
+        dept: document.getElementById('f_dept').value,
+        phone: document.getElementById('f_phone').value.trim(),
+        notes: document.getElementById('f_notes').value.trim()
+      });
+      DB.set('contacts', data); closeModal(); refreshAll();
+    }
+    function deleteItem(key, index) {
+      if (!canDelete()) { alert('ليس لديك صلاحية الحذف. هذه الصلاحية للمدراء فقط.'); return; }
+      if (!confirm('هل أنت متأكد من الحذف؟')) return;
+      const data = DB.get(key); data.splice(index, 1); DB.set(key, data); refreshAll();
+    }
+
+    function isManager() {
+      if (currentUser) return currentUser.perm === 'manager';
+      const s = DB.getSettings();
+      return (s.userPerm || 'manager') === 'manager';
+    }
+    function canDelete() { return isManager(); }
+    function delBtn(key, i) {
+      return canDelete() ? `<button class="btn btn-sm btn-danger" onclick="deleteItem('${key}',${i})">حذف</button>` : '';
+    }
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    function loadSettingsToForm() {
+      const s = DB.getSettings();
+      ['hq','factory'].forEach(t => {
+        if (document.getElementById(t+'Url')) {
+          document.getElementById(t+'Url').value = s[t]?.url||'';
+          document.getElementById(t+'Port').value = s[t]?.port||'';
+          document.getElementById(t+'User').value = s[t]?.user||'';
+        }
+      });
+      document.getElementById('setUserName').value = s.userName||'أحمد سيد';
+      document.getElementById('setUserRole').value = s.userRole||'مدير المشتريات';
+      if (document.getElementById('setUserPerm')) document.getElementById('setUserPerm').value = s.userPerm||'manager';
+      document.getElementById('currentUserName').textContent = s.userName||'أحمد سيد';
+      document.getElementById('currentUserRole').textContent = s.userRole||'مدير المشتريات';
+      updateConnectionStatusUI(s);
+      checkSyncStatus();
+    }
+    async function checkSyncStatus() {
+      const r = await API.call('/api/ping', {});
+      const ok = !!(r && r.ok);
+      const g = document.getElementById('globalStatusText'), f = document.getElementById('footerStatus');
+      if (g) g.textContent = ok ? 'متصل بقاعدة البيانات' : 'غير متصل (وضع محلي)';
+      if (f) f.textContent = ok ? 'متصل بقاعدة البيانات السحابية' : 'محلي (Local Storage)';
+      return ok;
+    }
+    function saveConnection(type) {
+      const s = DB.getSettings();
+      s[type].url = document.getElementById(type+'Url').value.trim();
+      s[type].port = document.getElementById(type+'Port').value.trim();
+      s[type].user = document.getElementById(type+'User').value.trim();
+      s[type].pass = document.getElementById(type+'Pass').value;
+      DB.setSettings(s); alert('تم حفظ بيانات الاتصال');
+    }
+    function testConnection(type) {
+      const s = DB.getSettings();
+      const el = document.getElementById(type+'Status');
+      el.className = 'conn-status connected';
+      el.innerHTML = '<i class="fas fa-check-circle"></i> متصل (محاكاة)';
+      s[type].connected = true; DB.setSettings(s); updateConnectionStatusUI(s);
+      alert('تم اختبار الاتصال بنجاح (محاكاة).\nللربط الحقيقي تحتاج Backend.');
+    }
+    function updateConnectionStatusUI(s) {
+      const any = (s.hq && s.hq.connected) || (s.factory && s.factory.connected);
+      document.getElementById('globalStatusText').textContent = any ? 'متصل جزئياً' : 'غير متصل بالسيرفر';
+      document.getElementById('footerStatus').textContent = any ? 'متصل بالسيرفر' : 'محلي (Local Storage)';
+    }
+    function saveUserSettings() {
+      const s = DB.getSettings();
+      s.userName = document.getElementById('setUserName').value.trim();
+      s.userRole = document.getElementById('setUserRole').value.trim();
+      s.userPerm = document.getElementById('setUserPerm').value;
+      DB.setSettings(s);
+      document.getElementById('currentUserName').textContent = s.userName;
+      document.getElementById('currentUserRole').textContent = s.userRole;
+      refreshAll();
+      alert('تم الحفظ — الصلاحية: ' + (s.userPerm === 'manager' ? 'مدير' : 'موظف'));
+    }
+    function clearAllData() {
+      if (!document.getElementById('clearDataConfirm').checked) { alert('ضع علامة التأكيد أولاً'); return; }
+      if (!confirm('مسح كل البيانات؟')) return;
+      ['purchases','orders','suppliers','inventory','receipts','shipping','contacts'].forEach(k => localStorage.removeItem('delta_'+k));
+      refreshAll(); alert('تم المسح');
+    }
+  </script>
+</body>
+</html>
